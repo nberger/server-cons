@@ -83,15 +83,4 @@
     (run 10 [q]
          (allocate-machines machines q)))
 
-  (let [machines [{:id 1 :cpu-avg 0.2}
-               {:id 2 :cpu-avg 0.17}
-               {:id 3 :cpu-avg 0.02}
-               {:id 4 :cpu-avg 0.03}
-               {:id 5 :cpu-avg 0.6}
-               {:id 6 :cpu-avg 0.11}
-               {:id 7 :cpu-avg 0.7}]]
-    (run 1 [q]
-         (allocate-machines machines 0.6 q))
-    )
-
   )
