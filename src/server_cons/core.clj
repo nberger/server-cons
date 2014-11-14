@@ -3,55 +3,65 @@
   (:use [clojure.core.logic])
   (:require [clojure.core.logic.fd :as fd]) )
 
-(def max-cpu 60)
-
-(defn allocate-machines
-  ([machines out]
-   (allocate-machines machines max-cpu out))
-  ([machines remaining-cpu out]
+(defn add-machines-into-group
+  ([machines max-cpu group other-groups]
+   (add-machines-into-group machines max-cpu max-cpu group other-groups))
+  ([machines max-cpu remaining-cpu group other-groups]
    (conde
-     ;; no more machines -> finish here
+     ;; stop when no more machines
      [(== machines [])
-      ]
+      (== group [])
+      (== other-groups [])]
 
-     [(fresh [group rest-groups machine rest machine-cpu-avg cpu]
-             ;; find the current group
-             (conso group rest-groups out)
-
+     [(fresh [machine rest machine-cpu-avg next-cpu]
              ;; find the machine & rest
              (conso machine rest machines)
 
              ;; extract this machine cpu
              (featurec machine {:cpu-avg machine-cpu-avg})
 
-             ;; ensure this machine does not exceed max cpu
-             (fd/<= machine-cpu-avg max-cpu)
-
              ;; resulting cpu after discounting current machine cpu
-             (fd/- remaining-cpu machine-cpu-avg cpu)
+             (fd/- remaining-cpu machine-cpu-avg next-cpu)
 
              (conde
                ;; branch one: There's room in current group for this machine, add it
-               [(fresh [_]
-                       (fd/<= 0 cpu)
-                       (allocate-machines rest cpu out)
-                       (conso machine _ group))
-                ]
+               [(fresh [group-rest]
+                       (fd/<= 0 next-cpu)
+                       (add-machines-into-group rest max-cpu next-cpu group-rest other-groups)
+                       (conso machine group-rest group))]
 
-               ;; branch two: no room -> create another group and continue with the rest
-               #_[(fresh [_]
-                       (fd/- remaining-cpu machine-cpu-avg cpu)
-                       (fd/> 0 cpu)
-                       (allocate-machines rest max-cpu rest-groups)
-                       (conso [machine] _ rest-groups))]
-               ))]))
+               ;; no more room, continue with other groups
+               [(fd/> 0 next-cpu)
+                (== group [])
+                (allocate-machines machines max-cpu other-groups)]))])))
+
+(defn allocate-machines
+  ([machines out]
+   (allocate-machines machines 60 out))
+  ([machines max-cpu out]
+   (conde
+     ;; no more machines -> finish here
+     [(== machines [])
+      (== out [])]
+
+     [(fresh [group rest-groups]
+             ;; find the current group
+             (conso group rest-groups out)
+
+             (add-machines-into-group machines max-cpu group rest-groups)
+             )]))
 
   )
 
 (comment
 
-  (let [machines [{:id 1 :cpu-avg 22}
+  (let [machines [
                   ]]
+    (run 10 [q]
+         (allocate-machines machines
+                            q)))
+
+  (let [machines [{:id 1 :cpu-avg 22}]]
     (run 10 [q]
          (allocate-machines machines
                             q)))
@@ -65,14 +75,13 @@
 
   (let [machines [{:id 1 :cpu-avg 22}
                   {:id 2 :cpu-avg 17}
-                  {:id 3 :cpu-avg 21}
+                  {:id 3 :cpu-avg 22}
                   {:id 4 :cpu-avg 3}
                   {:id 5 :cpu-avg 6}
                   {:id 6 :cpu-avg 11}
                   {:id 7 :cpu-avg 7}]]
     (run 10 [q]
-         (allocate-machines machines
-                            q)))
+         (allocate-machines machines q)))
 
   (let [machines [{:id 1 :cpu-avg 0.2}
                {:id 2 :cpu-avg 0.17}
