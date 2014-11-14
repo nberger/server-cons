@@ -89,26 +89,9 @@
                {:id 4 :cpu-avg 0.03}
                {:id 5 :cpu-avg 0.6}
                {:id 6 :cpu-avg 0.11}
-               {:id 7 :cpu-avg 0.7}]
-        new-machines-count 2
-        survival-machines (repeatedly new-machines-count lvar)
-        machines (repeatedly (count current-machines) lvar)
-        machine-assignments (repeatedly (count current-machines) lvar)
-        machines-with-assignments (map list machines machine-assignments)
-        resulting-machines [survival-machines machines-with-assignments]
-        ]
+               {:id 7 :cpu-avg 0.7}]]
     (run 1 [q]
-         (== q resulting-machines)
-         (== machines current-machines)
-         (fresh [x]
-                (membero x machine-assignments)
-                (membero x survival-machines))
-         (everyg fd/distinct survival-machines)
-         )
+         (allocate-machines machines 0.6 q))
     )
 
-  #_"((1 3) (1 2 3 4 5 6 7) (1 1 3 3 1 3 3))"
-
-  (cond
-      false true)
   )
