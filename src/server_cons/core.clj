@@ -5,35 +5,42 @@
 
 (defn add-machines-into-group
   ([machines max-cpu group other-groups]
-   (add-machines-into-group machines max-cpu max-cpu group other-groups))
-  ([machines max-cpu remaining-cpu group other-groups]
+   (add-machines-into-group machines [] max-cpu max-cpu group other-groups))
+  ([machines delayed-machines max-cpu remaining-cpu group other-groups]
    (conde
-     ;; stop when no more machines
+     ;; when no more machines and no delayed machines -> stop here
      [(== machines [])
+      (== delayed-machines [])
       (== group [])
       (== other-groups [])]
 
-     [(fresh [machine rest machine-cpu-avg next-cpu]
+     ;; when no more machines but some delayed -> start over with the delayed machines
+     [(== machines [])
+      (!= delayed-machines [])
+      (== group [])
+      (allocate-machines delayed-machines max-cpu other-groups)]
+
+     [(fresh [machine rest machine-cpu-avg]
              ;; find the machine & rest
              (conso machine rest machines)
 
              ;; extract this machine cpu
              (featurec machine {:cpu-avg machine-cpu-avg})
 
-             ;; resulting cpu after discounting current machine cpu
-             (fd/- remaining-cpu machine-cpu-avg next-cpu)
-
              (conde
-               ;; branch one: There's room in current group for this machine, add it
-               [(fresh [group-rest]
+
+               ;; branch one: There's room in current group for this machine -> add it
+               [(fresh [next-cpu group-rest]
+                       ;; resulting cpu after discounting current machine cpu
+                       (fd/- remaining-cpu machine-cpu-avg next-cpu)
                        (fd/<= 0 next-cpu)
-                       (add-machines-into-group rest max-cpu next-cpu group-rest other-groups)
+                       (add-machines-into-group rest delayed-machines max-cpu next-cpu group-rest other-groups)
                        (conso machine group-rest group))]
 
-               ;; no more room, continue with other groups
-               [(fd/> 0 next-cpu)
-                (== group [])
-                (allocate-machines machines max-cpu other-groups)]))])))
+               ;; branch two: delay this machine and continue with rest
+               [(fresh [new-delayed-machines]
+                       (conso machine delayed-machines new-delayed-machines)
+                       (add-machines-into-group rest new-delayed-machines max-cpu remaining-cpu group other-groups))]))])))
 
 (defn allocate-machines
   ([machines out]
@@ -57,19 +64,19 @@
 
   (let [machines [
                   ]]
-    (run 10 [q]
+    (run 1 [q]
          (allocate-machines machines
                             q)))
 
   (let [machines [{:id 1 :cpu-avg 22}]]
-    (run 10 [q]
+    (run 1 [q]
          (allocate-machines machines
                             q)))
 
   (let [machines [{:id 1 :cpu-avg 22}
                   {:id 2 :cpu-avg 17}
                   ]]
-    (run 10 [q]
+    (run 1 [q]
          (allocate-machines machines
                             q)))
 
@@ -80,7 +87,21 @@
                   {:id 5 :cpu-avg 6}
                   {:id 6 :cpu-avg 11}
                   {:id 7 :cpu-avg 7}]]
-    (run 10 [q]
+    (run 1 [q]
+         (allocate-machines machines q)))
+
+
+  (let [machines [{:id 1 :cpu-avg 22}
+                  {:id 2 :cpu-avg 17}
+                  {:id 3 :cpu-avg 22}
+                  {:id 4 :cpu-avg 3}
+                  {:id 5 :cpu-avg 6}
+                  {:id 6 :cpu-avg 11}
+                  {:id 7 :cpu-avg 35}
+                  {:id 8 :cpu-avg 26}
+                  {:id 9 :cpu-avg 29}
+                  {:id 10 :cpu-avg 7}]]
+    (run 1 [q]
          (allocate-machines machines q)))
 
   )
