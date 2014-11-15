@@ -1,6 +1,6 @@
 # server-cons
 
-A Clojure library designed to ... well, that part is up to you.
+Distribute the servers
 
 ## Usage
 
