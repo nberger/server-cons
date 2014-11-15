@@ -1,3 +1,4 @@
+;; example taken from https://gist.github.com/brehaut/9673354
 (ns server-cons.monsters
   (:require [clojure.core.logic :as l]
             [clojure.core.logic.fd :as fd]))
