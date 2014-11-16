@@ -11,7 +11,7 @@
   (gen/hash-map :cpu-avg (gen/choose 1 max-cpu)))
 
 (def machines-gen
-  (gen/bind (gen/choose 1 60)
+  (gen/bind (gen/choose 1 100)
             #(gen/tuple (gen/vector (machine-gen %)) (gen/return %))))
 
 (def prop-all-machines-are-allocated
