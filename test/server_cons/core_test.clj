@@ -1,9 +1,34 @@
 (ns server-cons.core-test
-  (:require [midje.sweet :refer [=> throws fact facts future-fact]]
-            [clojure.core.logic :refer [run]]))
+  (:require [server-cons.core :refer [allocate-machines]]
+            [midje.sweet :refer [=> throws fact facts future-fact]]
+            [clojure.core.logic :refer [run]]
+            [clojure.test.check :as tc]
+            [clojure.test.check.generators :as gen]
+            [clojure.test.check.properties :as prop]))
 
-(require '[server-cons.core :refer [allocate-machines]])
+(defn machine-gen
+  [max-cpu]
+  (gen/hash-map :cpu-avg (gen/choose 1 max-cpu)))
 
+(def machines-gen
+  (gen/bind (gen/choose 1 60)
+            #(gen/tuple (gen/vector (machine-gen %)) (gen/return %))))
+
+(def prop-all-machines-are-allocated
+  (prop/for-all [[machines max-cpu] machines-gen]
+    (let [grouped-machines (allocate-machines machines max-cpu)
+          flattened (apply concat grouped-machines)]
+      (and
+        (= (set flattened) (set machines))
+        (= (count flattened) (count machines))))))
+
+(def prop-no-group-exceeds-max-cpu
+  (prop/for-all [[machines max-cpu] machines-gen]
+    (let [grouped-machines (allocate-machines machines max-cpu)]
+      (every? #(>= max-cpu (reduce + (map :cpu-avg %))) grouped-machines))))
+
+(tc/quick-check 20 prop-all-machines-are-allocated)
+(tc/quick-check 20 prop-no-group-exceeds-max-cpu)
 
 (facts "about server-cons"
 
