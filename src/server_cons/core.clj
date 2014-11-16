@@ -3,9 +3,9 @@
   (:use [clojure.core.logic])
   (:require [clojure.core.logic.fd :as fd]) )
 
-(declare allocate-machines)
+(declare make-groups)
 
-(defn add-machines-into-group
+(defn- add-machines-into-group
   ([machines max-cpu group other-groups]
    (add-machines-into-group machines [] max-cpu max-cpu group other-groups))
   ([machines delayed-machines max-cpu remaining-cpu group other-groups]
@@ -20,7 +20,7 @@
      [(== machines [])
       (!= delayed-machines [])
       (== group [])
-      (allocate-machines delayed-machines max-cpu other-groups)]
+      (make-groups delayed-machines max-cpu other-groups)]
 
      [(fresh [machine rest machine-cpu-avg]
              ;; get the machine & rest
@@ -44,9 +44,9 @@
                        (conso machine delayed-machines new-delayed-machines)
                        (add-machines-into-group rest new-delayed-machines max-cpu remaining-cpu group other-groups))]))])))
 
-(defn allocate-machines
+(defn- make-groups
   ([machines out]
-   (allocate-machines machines 60 out))
+   (make-groups machines 60 out))
   ([machines max-cpu out]
    (conde
      ;; no more machines -> finish here
@@ -61,3 +61,10 @@
              )]))
 
   )
+
+(defn allocate-machines
+  ([machines]
+   (allocate-machines machines 60))
+  ([machines max-cpu]
+   (first (run 1 [q]
+               (make-groups machines 60 q)))))
