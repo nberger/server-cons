@@ -42,13 +42,7 @@
                ;; branch two: delay this machine and continue with rest
                [(fresh [new-delayed-machines]
                        (conso machine delayed-machines new-delayed-machines)
-                       (add-machines-into-group rest new-delayed-machines max-cpu remaining-cpu group other-groups))]
-
-               ;; branch three: delay this and the next machine and continue with the rest
-               [(fresh [new-delayed-machines]
-                       (conso machine delayed-machines new-delayed-machines)
-                       (add-machines-into-group rest new-delayed-machines max-cpu remaining-cpu group other-groups))]
-                ))])))
+                       (add-machines-into-group rest new-delayed-machines max-cpu remaining-cpu group other-groups))]))])))
 
 (defn allocate-machines
   ([machines out]
@@ -67,5 +61,3 @@
              )]))
 
   )
-
-
