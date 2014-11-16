@@ -3,6 +3,8 @@
   (:use [clojure.core.logic])
   (:require [clojure.core.logic.fd :as fd]) )
 
+(declare allocate-machines)
+
 (defn add-machines-into-group
   ([machines max-cpu group other-groups]
    (add-machines-into-group machines [] max-cpu max-cpu group other-groups))
@@ -66,41 +68,4 @@
 
   )
 
-(comment
 
-  (let [machines []]
-    (run 1 [q] (allocate-machines machines q)))
-  (let [machines [{:id 1 :cpu-avg 22}]]
-    (run 1 [q] (allocate-machines machines q)))
-
-  (let [machines [{:id 1 :cpu-avg 22}
-                  {:id 2 :cpu-avg 17}
-                  ]]
-    (run 1 [q] (allocate-machines machines q)))
-  ;; ((({:cpu-avg 22, :id 1} {:cpu-avg 17, :id 2})))
-
-  (let [machines [{:id 1 :cpu-avg 22}
-                  {:id 2 :cpu-avg 17}
-                  {:id 3 :cpu-avg 22}
-                  {:id 4 :cpu-avg 3}
-                  {:id 5 :cpu-avg 6}
-                  {:id 6 :cpu-avg 11}
-                  {:id 7 :cpu-avg 7}]]
-    (run 1 [q] (allocate-machines machines q)))
-  ;; ((({:cpu-avg 22, :id 1} {:cpu-avg 17, :id 2} {:cpu-avg 3, :id 4} {:cpu-avg 6, :id 5} {:cpu-avg 11, :id 6}) ({:cpu-avg 7, :id 7} {:cpu-avg 22, :id 3})))
-
-  (let [machines [{:id 1 :cpu-avg 22}
-                  {:id 2 :cpu-avg 17}
-                  {:id 3 :cpu-avg 22}
-                  {:id 4 :cpu-avg 3}
-                  {:id 5 :cpu-avg 6}
-                  {:id 6 :cpu-avg 11}
-                  {:id 7 :cpu-avg 35}
-                  {:id 8 :cpu-avg 26}
-                  {:id 9 :cpu-avg 29}
-                  {:id 10 :cpu-avg 7}]]
-    (run 1 [q] (allocate-machines machines q)))
-  ;; ((({:cpu-avg 22, :id 1} {:cpu-avg 17, :id 2} {:cpu-avg 3, :id 4} {:cpu-avg 6, :id 5} {:cpu-avg 11, :id 6}) ({:cpu-avg 7, :id 10} {:cpu-avg 29, :id 9} {:cpu-avg 22, :id 3}) ({:cpu-avg 35, :id 7}) ({:cpu-avg 26, :id 8})))
-
-
-  )
