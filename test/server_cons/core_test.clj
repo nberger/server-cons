@@ -2,7 +2,7 @@
   (:require [server-cons.core :refer [allocate-machines]]
             [midje.sweet :refer [=> throws fact facts future-fact]]
             [clojure.core.logic :refer [run]]
-            [clojure.test.check :as tc]
+            [clojure.test.check.clojure-test :as ct :refer (defspec)]
             [clojure.test.check.generators :as gen]
             [clojure.test.check.properties :as prop]))
 
@@ -27,8 +27,10 @@
     (let [grouped-machines (allocate-machines machines max-cpu)]
       (every? #(>= max-cpu (reduce + (map :cpu-avg %))) grouped-machines))))
 
-(tc/quick-check 20 prop-all-machines-are-allocated)
-(tc/quick-check 20 prop-no-group-exceeds-max-cpu)
+
+(defspec all-machines-are-allocated 20 prop-all-machines-are-allocated {:max-size 100})
+
+(defspec no-group-exceeds-max-cpu 20 prop-no-group-exceeds-max-cpu {:max-size 100})
 
 (facts "about server-cons"
 
