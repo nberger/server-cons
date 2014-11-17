@@ -29,6 +29,9 @@
              ;; extract this machine cpu
              (featurec machine {:cpu-avg machine-cpu-avg})
 
+             ;; this machine cpu should be less than max cpu
+             (fd/<= machine-cpu-avg max-cpu)
+
              (conde
 
                ;; branch one: There's room in current group for this machine -> add it
