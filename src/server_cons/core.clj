@@ -48,8 +48,6 @@
                        (add-machines-into-group rest new-delayed-machines max-cpu remaining-cpu group other-groups))]))])))
 
 (defn- make-groups
-  ([machines out]
-   (make-groups machines 60 out))
   ([machines max-cpu out]
    (conde
      ;; no more machines -> finish here
@@ -70,4 +68,4 @@
    (allocate-machines machines 60))
   ([machines max-cpu]
    (first (run 1 [q]
-               (make-groups machines 60 q)))))
+               (make-groups machines max-cpu q)))))
