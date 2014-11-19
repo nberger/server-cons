@@ -35,18 +35,34 @@
                                         {:id 9 :cpu-avg 29}
                                         {:id 10 :cpu-avg 7}]})))
 
+(defn underutilization
+  [max-cpu machines]
+  (- max-cpu (reduce + (map :cpu-avg machines))))
+
+(defn avg-underutilization
+  [max-cpu machine-groups]
+  (->> machine-groups
+       (map (partial underutilization max-cpu))
+       (reduce +)
+       (#(/ % (count machine-groups)))))
+
 (defn show-allocated-machines
-  [machines allocated-machines]
+  [max-cpu machines allocated-machines]
   [:div.result
    [:h1 "Result"]
    [:p "Original machines: " [:bold (count machines)]]
+   [:p "Original avg underutilization: "
+    [:bold (float (avg-underutilization max-cpu (map vector machines)))]]
    [:p "Resulting machines: " [:bold (count allocated-machines)]]
+   [:p "Resulting avg underutilization: "
+    [:bold (float (avg-underutilization max-cpu allocated-machines))]]
    (for [[i group] (map-indexed vector allocated-machines)
          :let [group-cpu (reduce + (map #(Integer. (:cpu-avg %)) group))
                i (inc i)]]
      [:div.group
       [:h1 "Server " i]
       [:p "Machine count: " [:bold (count group)]]
+      [:p "Underutilization: " [:bold (underutilization max-cpu group)]]
       [:table {:style "text-align: center"}
        [:thead
         [:tr
@@ -68,7 +84,7 @@
         max-cpu (Integer. max-cpu)
         allocated-machines (c/allocate-machines machines max-cpu)]
     (html (consolidation-form params)
-          (show-allocated-machines machines allocated-machines))))
+          (show-allocated-machines max-cpu machines allocated-machines))))
 
 (defroutes app
   (GET "/" [] new-consolidation)
