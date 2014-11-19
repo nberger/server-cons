@@ -65,11 +65,8 @@
 (defn create-consolidation
   [{:keys [machines max-cpu] :as params}]
   (let [machines (edn/read-string machines)
-        _ (println "max cpu param " max-cpu)
         max-cpu (Integer. max-cpu)
         allocated-machines (c/allocate-machines machines max-cpu)]
-    (println "params " params)
-    (println machines)
     (html (consolidation-form params)
           (show-allocated-machines machines allocated-machines))))
 
