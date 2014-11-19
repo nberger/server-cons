@@ -6,5 +6,12 @@
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/core.logic "0.8.8"]
                  [midje "1.6.3"]
-                 [org.clojure/test.check "0.6.0"]]
+                 [org.clojure/test.check "0.6.0"]
+                 [compojure "1.2.1"]
+                 [ring/ring-core "1.3.1"]
+                 [ring/ring-defaults "0.1.2"]
+                 [ring/ring-jetty-adapter "1.3.1"]
+                 [hiccup "1.0.5"]]
+  :plugins [[lein-ring "0.8.13"]]
+  :ring {:handler server-cons.site/site}
   :profiles {:dev {:plugins [[lein-midje "3.1.1"]]}})
