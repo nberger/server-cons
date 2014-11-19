@@ -1,7 +1,6 @@
 (ns server-cons.site
   (:require [compojure.core :refer :all]
             [compojure.route :as route]
-            [ring.adapter.jetty :as jetty]
             [ring.middleware.defaults :refer :all]
             [server-cons.core :as c]
             [clojure.edn :as edn]
