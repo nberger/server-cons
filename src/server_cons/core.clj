@@ -29,9 +29,6 @@
              ;; extract this machine cpu
              (featurec machine {:cpu-avg machine-cpu-avg})
 
-             ;; this machine cpu should be less than max cpu
-             (fd/<= machine-cpu-avg max-cpu)
-
              (conde
 
                ;; branch one: There's room in current group for this machine -> add it
@@ -67,5 +64,7 @@
   ([machines]
    (allocate-machines machines 60))
   ([machines max-cpu]
+   (when (some #(> (:cpu-avg %) max-cpu) machines)
+     (throw (Exception. "Some machines exceed max-cpu, no allocation possible")))
    (first (run 1 [q]
                (make-groups machines max-cpu q)))))
