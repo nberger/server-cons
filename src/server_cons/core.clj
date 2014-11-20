@@ -10,14 +10,14 @@
    (add-machines-into-group machines [] max-cpu max-cpu group other-groups))
   ([machines delayed-machines max-cpu remaining-cpu group other-groups]
    (conde
-     ;; when no more machines and no delayed machines -> stop here
-     [(== machines [])
-      (== delayed-machines [])
-      (== group [])
-      (== other-groups [])]
+     ;; when no more machines and no delayed machines -> no more groups
+     [(emptyo machines)
+      (emptyo delayed-machines)
+      (emptyo group)
+      (emptyo other-groups)]
 
      ;; when no more machines but some delayed -> start over with the delayed machines
-     [(== machines [])
+     [(emptyo machines)
       (!= delayed-machines [])
       (== group [])
       (make-groups delayed-machines max-cpu other-groups)]
