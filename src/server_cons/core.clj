@@ -5,12 +5,9 @@
 
 (defn getcpuo
   [all-machines id cpu]
-  (let [tabled-fn (tabled [id cpu]
-                            (fresh [machine]
-                                   (membero machine all-machines)
-                                   (featurec machine {:id id :cpu-avg cpu})))]
-    (tabled-fn id cpu))
-  )
+  (fresh [machine]
+         (membero machine all-machines)
+         (featurec machine {:id id :cpu-avg cpu})))
 
 ;; alternative 4
 ;;
