@@ -271,7 +271,47 @@
            #_(allmaxcpuo machines max-cpu groups) 
            )))
 
+;; alternative 4
+;;
+(defn enoughcpuo
+  [all-machines id max-cpu remaining-cpu]
+  (fresh [cpu]
+         (getcpuo all-machines id cpu)
+         (fd/- max-cpu cpu remaining-cpu)
+         (fd/>= remaining-cpu 0)))
 
+(defn machinesgroupo
+  [all-machines machine-ids final-rest-ids remaining-cpu group]
+  (conda
+    ;; no machines -> finish here
+    [(emptyo machine-ids) (== machine-ids final-rest-ids) (emptyo group)]
+    ;; no more cpu -> finish here
+    [(== 0 remaining-cpu) (== machine-ids final-rest-ids) (emptyo group)]
+
+    [(conde
+       ;; branch 1: close group here
+       [(== machine-ids final-rest-ids) (emptyo group)]
+
+       ;; branch 2: try to add a machine to the group
+       [(fresh [id rest-group rest-ids next-remaining-cpu]
+               (rembero id machine-ids rest-ids)
+
+               (enoughcpuo all-machines id remaining-cpu next-remaining-cpu)
+
+               (conso id rest-group group)
+
+               (machinesgroupo all-machines rest-ids final-rest-ids next-remaining-cpu rest-group))])]))
+
+(defn make-groups4
+  [all-machines machine-ids max-cpu groups]
+  (conda
+    [(emptyo machine-ids) (== groups [])]
+    [(fresh [group rest-groups rest-ids permuted-ids next-ids]
+            (machinesgroupo all-machines machine-ids rest-ids max-cpu group)
+            (!= group [])
+            (conso group rest-groups groups)
+            (make-groups4 all-machines rest-ids max-cpu rest-groups)
+            )]))
 
 (defn allocate-machines
   ([machines]
@@ -281,7 +321,7 @@
      (throw (Exception. "Some machines exceed max-cpu, no allocation possible")))
 
    (run* [q]
-        (make-groups3 machines max-cpu q))))
+        (make-groups4 machines (map :id machines) max-cpu q))))
 
 
 
