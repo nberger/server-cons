@@ -1,18 +1,11 @@
 (ns server-cons.core-test
   (:require [server-cons.core :refer [allocate-machines]]
+            [server-cons.generators :refer [machines-gen]]
             [midje.sweet :refer [=> throws fact facts future-fact]]
             [clojure.core.logic :refer [run]]
             [clojure.test.check.clojure-test :as ct :refer (defspec)]
             [clojure.test.check.generators :as gen]
             [clojure.test.check.properties :as prop]))
-
-(defn machine-gen
-  [max-cpu]
-  (gen/hash-map :cpu-avg (gen/choose 1 max-cpu)))
-
-(def machines-gen
-  (gen/bind (gen/choose 1 100)
-            #(gen/tuple (gen/vector (machine-gen %)) (gen/return %))))
 
 (def prop-all-machines-are-allocated
   (prop/for-all [[machines max-cpu] machines-gen]
