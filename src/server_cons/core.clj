@@ -281,40 +281,44 @@
          (fd/>= remaining-cpu 0)))
 
 (defn machinesgroupo
-  ([all-machines machine-ids final-rest-ids remaining-cpu group]
-   (machinesgroupo all-machines machine-ids final-rest-ids 0 remaining-cpu group))
-  ([all-machines machine-ids final-rest-ids min-id remaining-cpu group]
+  ([all-machines machine-ids final-rest-ids min-id max-cpu group]
    (conda
      ;; no machines -> finish here
      [(emptyo machine-ids) (== machine-ids final-rest-ids) (emptyo group)]
      ;; no more cpu -> finish here
-     [(== 0 remaining-cpu) (== machine-ids final-rest-ids) (emptyo group)]
+     [(== 0 max-cpu) (== machine-ids final-rest-ids) (emptyo group)]
 
      [(conde
         ;; branch 1: close group here
         [(== machine-ids final-rest-ids) (emptyo group)]
 
         ;; branch 2: try to add a machine to the group
-        [(fresh [id rest-group rest-ids next-remaining-cpu]
+        [(fresh [id rest-group rest-ids remaining-cpu]
                 (rembero id machine-ids rest-ids)
                 (fd/> id min-id)
 
-                (enoughcpuo all-machines id remaining-cpu next-remaining-cpu)
+                (enoughcpuo all-machines id max-cpu remaining-cpu)
 
                 (conso id rest-group group)
 
-                (machinesgroupo all-machines rest-ids final-rest-ids next-remaining-cpu rest-group))])])))
+                (machinesgroupo all-machines rest-ids final-rest-ids id remaining-cpu rest-group))])])))
 
 (defn make-groups4
-  [all-machines machine-ids max-cpu groups]
-  (conda
-    [(emptyo machine-ids) (== groups [])]
-    [(fresh [group rest-groups rest-ids permuted-ids next-ids]
-            (machinesgroupo all-machines machine-ids rest-ids max-cpu group)
-            (!= group [])
-            (conso group rest-groups groups)
-            (make-groups4 all-machines rest-ids max-cpu rest-groups)
-            )]))
+  ([all-machines machine-ids max-cpu groups]
+   (make-groups4 all-machines 0 machine-ids max-cpu groups))
+
+  ([all-machines min-id machine-ids max-cpu groups]
+   (conda
+     [(emptyo machine-ids) (emptyo groups)]
+     [(fresh [group first-id rest-groups rest-ids permuted-ids next-ids]
+
+             (machinesgroupo all-machines machine-ids rest-ids min-id max-cpu group)
+
+             (!= group [])
+             (conso group rest-groups groups)
+             (firsto group first-id)
+             (make-groups4 all-machines first-id rest-ids max-cpu rest-groups)
+             )])))
 
 (defn allocate-machines
   ([machines]
@@ -333,12 +337,12 @@
 
     (let [machines [{:id 1 :cpu-avg 22}
                     ]]
-      (take 1 (allocate-machines machines 60)))
+      (take 10 (allocate-machines machines 60)))
 
     (let [machines [{:id 1 :cpu-avg 22}
                     {:id 2 :cpu-avg 3}
                     ]]
-      (take 1 (allocate-machines machines 60)))
+      (take 10 (allocate-machines machines 60)))
 
     (let [machines [{:id 1 :cpu-avg 22}
                     {:id 2 :cpu-avg 17}
@@ -347,5 +351,5 @@
                     {:id 5 :cpu-avg 6}
                     {:id 6 :cpu-avg 11}
                     {:id 7 :cpu-avg 7}]]
-      (count(allocate-machines (take 6 machines))))
+      (take 20 (allocate-machines (take 6 machines))))
   )
