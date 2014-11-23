@@ -281,26 +281,29 @@
          (fd/>= remaining-cpu 0)))
 
 (defn machinesgroupo
-  [all-machines machine-ids final-rest-ids remaining-cpu group]
-  (conda
-    ;; no machines -> finish here
-    [(emptyo machine-ids) (== machine-ids final-rest-ids) (emptyo group)]
-    ;; no more cpu -> finish here
-    [(== 0 remaining-cpu) (== machine-ids final-rest-ids) (emptyo group)]
+  ([all-machines machine-ids final-rest-ids remaining-cpu group]
+   (machinesgroupo all-machines machine-ids final-rest-ids 0 remaining-cpu group))
+  ([all-machines machine-ids final-rest-ids min-id remaining-cpu group]
+   (conda
+     ;; no machines -> finish here
+     [(emptyo machine-ids) (== machine-ids final-rest-ids) (emptyo group)]
+     ;; no more cpu -> finish here
+     [(== 0 remaining-cpu) (== machine-ids final-rest-ids) (emptyo group)]
 
-    [(conde
-       ;; branch 1: close group here
-       [(== machine-ids final-rest-ids) (emptyo group)]
+     [(conde
+        ;; branch 1: close group here
+        [(== machine-ids final-rest-ids) (emptyo group)]
 
-       ;; branch 2: try to add a machine to the group
-       [(fresh [id rest-group rest-ids next-remaining-cpu]
-               (rembero id machine-ids rest-ids)
+        ;; branch 2: try to add a machine to the group
+        [(fresh [id rest-group rest-ids next-remaining-cpu]
+                (rembero id machine-ids rest-ids)
+                (fd/> id min-id)
 
-               (enoughcpuo all-machines id remaining-cpu next-remaining-cpu)
+                (enoughcpuo all-machines id remaining-cpu next-remaining-cpu)
 
-               (conso id rest-group group)
+                (conso id rest-group group)
 
-               (machinesgroupo all-machines rest-ids final-rest-ids next-remaining-cpu rest-group))])]))
+                (machinesgroupo all-machines rest-ids final-rest-ids next-remaining-cpu rest-group))])])))
 
 (defn make-groups4
   [all-machines machine-ids max-cpu groups]
@@ -344,5 +347,5 @@
                     {:id 5 :cpu-avg 6}
                     {:id 6 :cpu-avg 11}
                     {:id 7 :cpu-avg 7}]]
-      (take 10 (allocate-machines (take 6 machines))))
+      (count(allocate-machines (take 6 machines))))
   )
