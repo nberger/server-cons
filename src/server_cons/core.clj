@@ -104,13 +104,18 @@
 
 (defn lolo
   "Relation where l is a list of lists"
-  [l]
-  (conde
-    [(emptyo l)]
-    [(fresh [head tail]
-            (conso head tail l)
-            (listo head)
-            (lolo tail))]))
+  ([l]
+   (lolo l nil))
+  ([l g]
+   (conde
+     [(emptyo l)]
+     [(fresh [head tail]
+             (conso head tail l)
+             (listo head)
+             (trace-s)
+             #_(when g
+               (g head))
+             (lolo tail g))])))
 
 (defn containedo
   [subl l]
@@ -121,9 +126,20 @@
          (rembero x l rest-l)
          (containedo rest-subl rest-l))]))
 
+(defn nonemptyo
+  [l]
+  (conda
+    [(emptyo l) u#]
+    [s#]))
+
 (comment
   (run 15 [q]
        (lolo  q)
+       )
+
+  (run 15 [q]
+       (lolo q
+             nonemptyo)
        )
 
   (run 5 [q]
@@ -143,22 +159,23 @@
 
 (defn concateo
   [gs out]
-  (lolo gs)
-  (conde
-    [(emptyo gs) (emptyo out)]
-    [(fresh [head tail concated-tail]
-            (conso head tail gs)
-            (concateo tail concated-tail)
-            (appendo head concated-tail out))]))
+  (all
+    (lolo gs)
+    (conde
+      [(emptyo gs) (emptyo out)]
+      [(fresh [head tail concated-tail]
+              (conso head tail gs)
+              (concateo tail concated-tail)
+              (appendo head concated-tail out))])))
 
 (defn partitiono
   "Relation where groups is a partition of machines"
   [machines groups]
-  (lolo groups)
-  #_(allgroupscontainedo groups machines)
-  (fresh [concated]
-         (concateo groups concated)
-         (permuteo machines concated))
+  
+    (lolo groups)
+    (fresh [concated]
+           (concateo groups concated)
+           (permuteo machines concated))
   )
 
 (comment
@@ -180,18 +197,15 @@
        ))
 
 (defn getcpuo
-  [all-machines id out]
-  (project [id]
-           (let [cpu (->> all-machines
-                          (filter #(= (:id %) id))
-                          first
-                          :cpu-avg)]
-             (== cpu out))))
+  [all-machines id cpu]
+  (fresh [machine]
+         (membero machine all-machines)
+         (featurec machine {:id id :cpu-avg cpu})))
 
 (defn sumcpuo
   [all-machines ids out]
-  (conde
-    [(emptyo ids) (== 0 out)]
+  (conda
+    [(emptyo ids) (== out 0)]
     [(fresh [id cpu rest rest-cpu]
            (conso id rest ids)
            (getcpuo all-machines id cpu)
@@ -213,7 +227,7 @@
                 q))
 
   (run 5 [q]
-       (sumcpuo [{:id 1 :cpu-avg 3} {:id 2 :cpu-avg 5} {:id 3 :cpu-avg 4}]
+       (sumcpuo machines
                 [1 3]
                 q)))
 
@@ -231,7 +245,9 @@
        (maxcpuo machines 12 [1 2 3]))
 
   (run 5 [q]
-       (allmaxcpuo machines 7 [[1 2] [3]]))
+       (all
+         (partitiono (map :id machines) q)
+         (allmaxcpuo machines 11 q)))
 
   )
 
@@ -247,15 +263,15 @@
 (defn make-groups3
   [machines max-cpu groups]
   (let [ids (map :id machines)]
-    (== (= (set ids) ids) true) ;; ensure unique ids
-    (partitiono ids groups)
-    (allmaxcpuo machines max-cpu groups)
-    ))
+    (fresh [concated]
+           (lolo groups nonemptyo)
+           (concateo groups concated)
+           (permuteo concated ids)
+           #_(distribute groups ::ff)
+           #_(allmaxcpuo machines max-cpu groups) 
+           )))
 
-(defn allocate-machines3
-  [machines max-cpu]
-  (run 5 [q]
-       (make-groups3 machines max-cpu q)))
+
 
 (defn allocate-machines
   ([machines]
@@ -264,15 +280,29 @@
    (when (some #(> (:cpu-avg %) max-cpu) machines)
      (throw (Exception. "Some machines exceed max-cpu, no allocation possible")))
 
-   (run 1 [q]
-        (make-groups2 machines max-cpu q))))
+   (run* [q]
+        (make-groups3 machines max-cpu q))))
+
+
 
 (comment
 
 
     (let [machines [{:id 1 :cpu-avg 22}
-                    {:id 3 :cpu-avg 22}
-                    {:id 4 :cpu-avg 22}
-                    {:id 2 :cpu-avg 17}]]
-      (allocate-machines3 machines 60))
+                    ]]
+      (take 1 (allocate-machines machines 60)))
+
+    (let [machines [{:id 1 :cpu-avg 22}
+                    {:id 2 :cpu-avg 3}
+                    ]]
+      (take 1 (allocate-machines machines 60)))
+
+    (let [machines [{:id 1 :cpu-avg 22}
+                    {:id 2 :cpu-avg 17}
+                    {:id 3 :cpu-avg 6}
+                    {:id 4 :cpu-avg 17}
+                    {:id 5 :cpu-avg 6}
+                    {:id 6 :cpu-avg 11}
+                    {:id 7 :cpu-avg 7}]]
+      (take 10 (allocate-machines (take 6 machines))))
   )
