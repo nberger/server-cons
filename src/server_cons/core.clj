@@ -198,9 +198,12 @@
 
 (defn getcpuo
   [all-machines id cpu]
-  (fresh [machine]
-         (membero machine all-machines)
-         (featurec machine {:id id :cpu-avg cpu})))
+  (let [tabled-fn (tabled [id cpu]
+                            (fresh [machine]
+                                   (membero machine all-machines)
+                                   (featurec machine {:id id :cpu-avg cpu})))]
+    (tabled-fn id cpu))
+  )
 
 (defn sumcpuo
   [all-machines ids out]
