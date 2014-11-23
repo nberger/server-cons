@@ -320,6 +320,23 @@
              (make-groups4 all-machines first-id rest-ids max-cpu rest-groups)
              )])))
 
+(defn- find-by-id
+  [items id]
+  (->> items
+       (filter #(= (:id %) id))
+       first))
+
+(comment
+  
+  (def machines [{:id 1 :cpu-avg 10} {:id 2 :cpu-avg 20}])
+  (filter #(= :id id) :id machines)
+  (find-by-id machines 1)
+  )
+
+(defn ids->machines
+  [machines ids]
+  (map #(find-by-id machines %) ids))
+
 (defn allocate-machines
   ([machines]
    (allocate-machines machines 60))
@@ -327,22 +344,23 @@
    (when (some #(> (:cpu-avg %) max-cpu) machines)
      (throw (Exception. "Some machines exceed max-cpu, no allocation possible")))
 
-   (run* [q]
-        (make-groups4 machines (map :id machines) max-cpu q))))
-
-
+   (->>
+     (run-nc 1 [q]
+          (make-groups4 machines (map :id machines) max-cpu q))
+     first
+     (map #(ids->machines machines %)))))
 
 (comment
 
 
     (let [machines [{:id 1 :cpu-avg 22}
                     ]]
-      (take 10 (allocate-machines machines 60)))
+      (allocate-machines machines 60))
 
     (let [machines [{:id 1 :cpu-avg 22}
                     {:id 2 :cpu-avg 3}
                     ]]
-      (take 10 (allocate-machines machines 60)))
+      (allocate-machines machines 60))
 
     (let [machines [{:id 1 :cpu-avg 22}
                     {:id 2 :cpu-avg 17}
@@ -351,5 +369,22 @@
                     {:id 5 :cpu-avg 6}
                     {:id 6 :cpu-avg 11}
                     {:id 7 :cpu-avg 7}]]
-      (take 20 (allocate-machines (take 6 machines))))
+      (allocate-machines machines))
+
+    (let [machines [{:id 1 :cpu-avg 22}
+                    {:id 2 :cpu-avg 17}
+                    {:id 3 :cpu-avg 6}
+                    {:id 4 :cpu-avg 17}
+                    {:id 5 :cpu-avg 6}
+                    {:id 2 :cpu-avg 17}
+                    {:id 3 :cpu-avg 6}
+                    {:id 4 :cpu-avg 17}
+                    {:id 5 :cpu-avg 6}
+                    {:id 2 :cpu-avg 17}
+                    {:id 3 :cpu-avg 6}
+                    {:id 4 :cpu-avg 17}
+                    {:id 5 :cpu-avg 6}
+                    {:id 6 :cpu-avg 11}
+                    {:id 7 :cpu-avg 7}]]
+      (time (allocate-machines machines)))
   )
