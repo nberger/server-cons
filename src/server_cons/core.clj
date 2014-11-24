@@ -58,15 +58,12 @@
              (make-groups4 all-machines first-id rest-ids max-cpu rest-groups)
              )])))
 
-(defn- find-by-id
-  [items id]
-  (->> items
-       (filter #(= (:id %) id))
-       first))
-
-(defn ids->machines
-  [machines ids]
-  (map #(find-by-id machines %) ids))
+(defn ids-partition->machines-partition
+  [all-machines ids-partition]
+  (let [machines-index (->> all-machines
+                          (map (juxt :id identity))
+                          (into {}))]
+    (map (partial map machines-index) ids-partition)))
 
 (defn allocate-machines
   ([machines]
@@ -78,4 +75,4 @@
    (->>
      (run* [q]
           (make-groups4 machines (map :id machines) max-cpu q))
-     (map (partial map (partial ids->machines machines))))))
+     (map (partial ids-partition->machines-partition machines)))))
