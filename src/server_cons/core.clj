@@ -59,13 +59,6 @@
        (filter #(= (:id %) id))
        first))
 
-(comment
-  
-  (def machines [{:id 1 :cpu-avg 10} {:id 2 :cpu-avg 20}])
-  (filter #(= :id id) :id machines)
-  (find-by-id machines 1)
-  )
-
 (defn ids->machines
   [machines ids]
   (map #(find-by-id machines %) ids))
