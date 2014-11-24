@@ -1,5 +1,5 @@
 (ns server-cons.bench
-  (:require [server-cons.core :refer [allocate-machines]]
+  (:require [server-cons.core :refer [allocate-machines allocate-machines*]]
             [server-cons.generators :as gen]
             [clojure.math.combinatorics :as combo]))
 
@@ -66,7 +66,7 @@
   [n]
   (println "benchmark logic solutions " n " machines")
   (let [machines (take n machines)
-        partitions (allocate-machines machines 60)]
+        partitions (allocate-machines* machines 60)]
     (bench-lazy-solutions partitions)))
 
 (defn score
@@ -89,6 +89,8 @@
       (println "n: " n)
       (bench-partition n)
       #_(bench-logic n)))
+
+  (bench-logic 4)
 
   (let [machines (take 2 machines)]
     (enoughcpu 60 machines))

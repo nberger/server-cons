@@ -65,9 +65,7 @@
                           (into {}))]
     (map (partial map machines-index) ids-partition)))
 
-(defn allocate-machines
-  ([machines]
-   (allocate-machines machines 60))
+(defn allocate-machines*
   ([machines max-cpu]
    (when (some #(> (:cpu-avg %) max-cpu) machines)
      (throw (Exception. "Some machines exceed max-cpu, no allocation possible")))
@@ -76,3 +74,9 @@
      (run* [q]
           (make-groups4 machines (map :id machines) max-cpu q))
      (map (partial ids-partition->machines-partition machines)))))
+
+(defn allocate-machines
+  ([machines]
+   (allocate-machines machines 60))
+  ([machines max-cpu]
+   (first (allocate-machines* machines max-cpu))))
