@@ -71,7 +71,6 @@
      (throw (Exception. "Some machines exceed max-cpu, no allocation possible")))
 
    (->>
-     (run-nc 1 [q]
+     (run* [q]
           (make-groups4 machines (map :id machines) max-cpu q))
-     first
-     (map #(ids->machines machines %)))))
+     (map (partial map (partial ids->machines machines))))))
