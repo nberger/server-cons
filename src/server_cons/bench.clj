@@ -1,5 +1,7 @@
 (ns server-cons.bench
-  (:require [server-cons.core :refer [allocate-machines]]))
+  (:require [server-cons.core :refer [allocate-machines]]
+            [server-cons.generators :as gen]
+            [clojure.math.combinatorics :as combo]))
 
 (def machines [{:id 1 :cpu-avg 22}
                {:id 2 :cpu-avg 17}
@@ -24,9 +26,81 @@
                {:id 21 :cpu-avg 11}
                {:id 22 :cpu-avg 7}])
 
+(defn enoughcpu
+  [max-cpu [machine & more]]
+  (if machine
+    (let [cpu (:cpu-avg machine)]
+      (and
+        (<= cpu max-cpu)
+        (enoughcpu (- max-cpu cpu) more)))
+    true))
+
+(defn all-groups-enough-cpu?
+  [max-cpu groups]
+  (every? (partial enoughcpu max-cpu) groups)
+  )
+(defn allocate-by-partitions
+  [max-cpu machines]
+  (->> machines
+       (combo/partitions)
+       (filter (partial all-groups-enough-cpu? max-cpu))))
+
+(declare best-solution)
+
+(defn bench-lazy-solutions
+  [partitions]
+  (time (println "solutions: " (count partitions)))
+  (println "first: ")
+  (println (first partitions))
+  (println "best: ")
+  (println (best-solution 60 partitions)))
+
+(defn bench-partition
+  [n]
+  (println "benchmark partition " n " machines")
+  (let [machines (take n machines)
+        partitions (allocate-by-partitions 60 machines)]
+    (bench-lazy-solutions partitions)))
+
+(defn bench-logic
+  [n]
+  (println "benchmark logic solutions " n " machines")
+  (let [machines (take n machines)
+        partitions (allocate-machines machines 60)]
+    (bench-lazy-solutions partitions)))
+
+(defn score
+  "Calculates a solution score. The lower the better"
+  [max-cpu solution]
+  (count solution))
+
+(defn best-solution
+  [max-cpu solutions]
+  (->> solutions
+       (map (juxt identity (partial score max-cpu)))
+       (reduce #(if (> (second %1) (second %2)) %2 %1))
+       first))
+
 (comment
 
-  (let [machines (take 1 machines)]
+  (count (combo/partitions (range 12))) ;4213597
+  (for [n (range 20)]
+    (do
+      (println "n: " n)
+      (bench-partition n)
+      #_(bench-logic n)))
+
+  (let [machines (take 2 machines)]
+    (enoughcpu 60 machines))
+
+  (let [machines (take 2 machines)]
+    (allocate-by-partitions 40 machines))
+
+  (let [machines (take 5 machines)]
+    (println "5 machines, partition"
+    (allocate-by-partitions 40 machines)))
+
+  (let [machines (vec (take 1 machines))]
     (allocate-machines machines 60))
 
   (let [machines (take 2 machines)]
