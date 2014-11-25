@@ -70,10 +70,14 @@
    (when (some #(> (:cpu-avg %) max-cpu) machines)
      (throw (Exception. "Some machines exceed max-cpu, no allocation possible")))
 
-   (->>
-     (run* [q]
-          (make-groups4 machines (map :id machines) max-cpu q))
-     (map (partial ids-partition->machines-partition machines)))))
+   (let [ids (map :id machines)]
+     (when-not (= (count ids) (count (set ids)))
+       (throw (Exception. "Some machine ids are repeated")))
+
+     (->>
+       (run* [q]
+             (make-groups4 machines ids max-cpu q))
+       (map (partial ids-partition->machines-partition machines))))))
 
 (defn allocate-machines
   ([machines]
