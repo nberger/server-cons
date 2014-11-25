@@ -26,11 +26,8 @@
      ;; no more cpu -> finish here
      [(== 0 max-cpu) (== machine-ids final-rest-ids) (emptyo group)]
 
-     [(conde
-        ;; branch 1: close group here
-        [(== machine-ids final-rest-ids) (emptyo group)]
-
-        ;; branch 2: try to add a machine to the group
+     [(conda
+        ;; branch 1: try to add a machine to the group
         [(fresh [id rest-group rest-ids remaining-cpu]
                 (rembero id machine-ids rest-ids)
                 (fd/> id min-id)
@@ -39,7 +36,10 @@
 
                 (conso id rest-group group)
 
-                (machinesgroupo all-machines rest-ids final-rest-ids id remaining-cpu rest-group))])])))
+                (machinesgroupo all-machines rest-ids final-rest-ids id remaining-cpu rest-group))]
+
+        ;; branch 2: close group here
+        [(== machine-ids final-rest-ids) (emptyo group)])])))
 
 (defn make-groups4
   ([all-machines machine-ids max-cpu groups]
