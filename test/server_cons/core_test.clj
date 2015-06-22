@@ -1,6 +1,6 @@
 (ns server-cons.core-test
   (:require [server-cons.core :refer [allocate-machines]]
-            [midje.sweet :refer [=> throws fact facts future-fact]]
+            [clojure.test :refer [is deftest testing]]
             [clojure.core.logic :refer [run]]
             [clojure.test.check.clojure-test :as ct :refer (defspec)]
             [clojure.test.check.generators :as gen]
@@ -40,23 +40,25 @@
    :max-size 10}
   prop-no-group-exceeds-max-cpu)
 
-(facts "about server-cons"
+(deftest allocate-machines-test
 
-  (fact
-    (let [machines []]
-      (allocate-machines machines)) => [])
+   (testing "no machines"
+     (let [machines []]
+       (is (= [] (allocate-machines machines)))))
 
-  (fact
+  (testing "1 machine"
     (let [machines [{:id 1 :cpu-avg 22}]]
-      (allocate-machines machines)) => `(({:id 1 :cpu-avg 22})))
+      (is (= [[{:id 1 :cpu-avg 22}]]
+             (allocate-machines machines)))))
 
-  (fact
+  (testing "2 machines"
     (let [machines [{:id 1 :cpu-avg 22}
                     {:id 2 :cpu-avg 17}]]
-      (allocate-machines machines) => `(({:id 1 :cpu-avg 22}
-                                         {:id 2 :cpu-avg 17}))))
+      (is (= [[{:id 1 :cpu-avg 22}
+               {:id 2 :cpu-avg 17}]]
+             (allocate-machines machines)))))
 
-  (fact
+  (testing "7 machines"
     (let [machines [{:id 1 :cpu-avg 22}
                     {:id 2 :cpu-avg 17}
                     {:id 3 :cpu-avg 22}
@@ -64,17 +66,16 @@
                     {:id 5 :cpu-avg 6}
                     {:id 6 :cpu-avg 11}
                     {:id 7 :cpu-avg 7}]]
-      (allocate-machines machines))
-         => `(({:id 1 :cpu-avg 22}
-                {:id 2 :cpu-avg 17}
-                {:id 4 :cpu-avg 3}
-                {:id 5 :cpu-avg 6}
-                {:id 6 :cpu-avg 11})
-               ({:id 7 :cpu-avg 7}
-                {:id 3 :cpu-avg 22})))
+      (is (= [[{:id 1 :cpu-avg 22}
+               {:id 2 :cpu-avg 17}
+               {:id 4 :cpu-avg 3}
+               {:id 5 :cpu-avg 6}
+               {:id 6 :cpu-avg 11}]
+              [{:id 7 :cpu-avg 7}
+               {:id 3 :cpu-avg 22}]]
+             (allocate-machines machines)))))
 
-  (fact
-
+  (testing "10 machines"
     (let [machines [{:id 1 :cpu-avg 22}
                     {:id 2 :cpu-avg 17}
                     {:id 3 :cpu-avg 22}
@@ -85,18 +86,14 @@
                     {:id 8 :cpu-avg 26}
                     {:id 9 :cpu-avg 29}
                     {:id 10 :cpu-avg 7}]]
-      (allocate-machines machines))
-         => `(({:cpu-avg 22, :id 1}
-                {:cpu-avg 17, :id 2}
-                {:cpu-avg 3, :id 4}
-                {:cpu-avg 6, :id 5}
-                {:cpu-avg 11, :id 6})
-               ({:cpu-avg 7, :id 10}
+      (is (= [[{:cpu-avg 22, :id 1}
+               {:cpu-avg 17, :id 2}
+               {:cpu-avg 3, :id 4}
+               {:cpu-avg 6, :id 5}
+               {:cpu-avg 11, :id 6}]
+               [{:cpu-avg 7, :id 10}
                 {:cpu-avg 29, :id 9}
-                {:cpu-avg 22, :id 3})
-               ({:cpu-avg 35, :id 7})
-               ({:cpu-avg 26, :id 8})))
-
-
-
-  )
+                {:cpu-avg 22, :id 3}]
+               [{:cpu-avg 35, :id 7}]
+               [{:cpu-avg 26, :id 8}]]
+             (allocate-machines machines))))))
