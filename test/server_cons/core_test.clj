@@ -28,9 +28,17 @@
       (every? #(>= max-cpu (reduce + (map :cpu-avg %))) grouped-machines))))
 
 
-(defspec all-machines-are-allocated 20 prop-all-machines-are-allocated :max-size 80)
+(defspec
+  all-machines-are-allocated
+  {:num-tests 20
+   :max-size 10}
+  prop-all-machines-are-allocated )
 
-(defspec no-group-exceeds-max-cpu 20 prop-no-group-exceeds-max-cpu :max-size 80)
+(defspec
+  no-group-exceeds-max-cpu
+  {:num-tests 20
+   :max-size 10}
+  prop-no-group-exceeds-max-cpu)
 
 (facts "about server-cons"
 
