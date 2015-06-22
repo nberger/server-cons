@@ -9,8 +9,6 @@
          (membero machine all-machines)
          (featurec machine {:id id :cpu-avg cpu})))
 
-;; alternative 4
-;;
 (defn enoughcpuo
   [all-machines id max-cpu remaining-cpu]
   (fresh [cpu]
@@ -41,9 +39,9 @@
         ;; branch 2: close group here
         [(== machine-ids final-rest-ids) (emptyo group)])])))
 
-(defn make-groups4
+(defn make-groups
   ([all-machines machine-ids max-cpu groups]
-   (make-groups4 all-machines 0 machine-ids max-cpu groups))
+   (make-groups all-machines 0 machine-ids max-cpu groups))
 
   ([all-machines min-id machine-ids max-cpu groups]
    (conda
@@ -55,7 +53,7 @@
              (!= group [])
              (conso group rest-groups groups)
              (firsto group first-id)
-             (make-groups4 all-machines first-id rest-ids max-cpu rest-groups)
+             (make-groups all-machines first-id rest-ids max-cpu rest-groups)
              )])))
 
 (defn ids-partition->machines-partition
@@ -76,7 +74,7 @@
 
      (->>
        (run* [q]
-             (make-groups4 machines ids max-cpu q))
+             (make-groups machines ids max-cpu q))
        (map (partial ids-partition->machines-partition machines))))))
 
 (defn allocate-machines
