@@ -14,7 +14,7 @@
   (fresh [cpu]
          (getcpuo all-machines id cpu)
          (fd/- max-cpu cpu remaining-cpu)
-         (fd/>= remaining-cpu 0)))
+         (fd/>= remaining-cpu 0))) ; ## without this we might exceed max-cpu in each group
 
 (defn machinesgroupo
   ([all-machines machine-ids final-rest-ids min-id max-cpu group]
@@ -22,14 +22,15 @@
      ;; no machines -> finish here
      [(emptyo machine-ids) (== machine-ids final-rest-ids) (emptyo group)]
      ;; no more cpu -> finish here
-     [(== 0 max-cpu) (== machine-ids final-rest-ids) (emptyo group)]
+     [(== 0 max-cpu) (== machine-ids final-rest-ids) (emptyo group)] ; ## optimization: without this we might continue trying to put machines into a full group
 
-     [(conda
+     [(conda ; ## if using conde instead, we'd get the smaller and the bigger group
+
         ;; branch 1: try to add a machine to the group
         [(fresh [id rest-group rest-ids remaining-cpu]
                 (rembero id machine-ids rest-ids)
 
-                (fd/>= id min-id)
+                (fd/>= id min-id) ; ## without this constraint we'll get permutations of each group
                 (enoughcpuo all-machines id max-cpu remaining-cpu)
 
                 (conso id rest-group group)
