@@ -53,11 +53,6 @@
              (firsto group first-id)
              (make-groups all-machines first-id rest-ids max-cpu rest-groups))])))
 
-  (comment
-    
-    (allocate-machines [{:cpu-avg 20}] 60)
-    
-    )
 (defn ids->machines
   [all-machines ids-partition]
   (map (comp second all-machines) ids-partition))
@@ -81,9 +76,32 @@
    (first (allocate-machines* machines max-cpu))))
 
 (comment
-  (slurp (clojure.java.io/resource "a"))
-  
+
+  (run* [q]
+        (fresh [x]
+               (membero [1 x] [[1 :a] [2 :b]])
+               (== q x)))
+  ; => :a
+
+  (run* [q]
+        (fresh [x]
+               (membero [2 x] [[1 :a] [2 :b]])
+               (== q x)))
+  ; => :b
+
   (run* [q] (fresh [x] (rembero x [3 1 2 3] q)))
 
-  (allocate-machines [{:cpu-avg 20}] 60)
+  (def machine-groups->name-groups (partial map (partial map :name)))
+  (def machine-groups->cpu-groups (partial map (partial map :cpu-avg)))
+
+  (allocate-machines* [{:cpu-avg 20}] 60)
+  (allocate-machines* [{:cpu-avg 20} {:cpu-avg 35}] 60)
+  (allocate-machines* [{:cpu-avg 20} {:cpu-avg 45}] 60)
+
+  (->> (allocate-machines* [{:cpu-avg 20 :name "m1"} {:cpu-avg 35 :name "m2"} {:cpu-avg 20 :name "m3"}] 60)
+       (map
+         #_identity
+         #_machine-groups->cpu-groups
+         machine-groups->name-groups))
+
   )
