@@ -6,6 +6,7 @@
   :dependencies [[org.clojure/clojure "1.7.0-RC2"]
                  [org.clojure/core.logic "0.8.10"]
                  [org.clojure/test.check "0.7.0"]
+                 [org.clojure/math.combinatorics "0.0.8"]
                  [compojure "1.2.1"]
                  [ring/ring-core "1.3.1"]
                  [ring/ring-defaults "0.1.2"]
