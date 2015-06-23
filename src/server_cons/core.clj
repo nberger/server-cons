@@ -39,9 +39,9 @@
         ;; branch 2: close group here
         [(== machine-ids final-rest-ids) (emptyo group)])])))
 
-(defn make-groups
+(defn machines-partitiono
   ([all-machines machine-ids max-cpu groups]
-   (make-groups all-machines 0 machine-ids max-cpu groups))
+   (machines-partitiono all-machines 0 machine-ids max-cpu groups))
 
   ([all-machines min-id machine-ids max-cpu groups]
    (conda
@@ -51,7 +51,7 @@
 
              (conso group rest-groups groups)
              (firsto group first-id)
-             (make-groups all-machines first-id rest-ids max-cpu rest-groups))])))
+             (machines-partitiono all-machines first-id rest-ids max-cpu rest-groups))])))
 
 (defn ids->machines
   [all-machines ids-partition]
@@ -66,7 +66,7 @@
          ids (mapv first machines)]
      (->>
        (run* [q]
-             (make-groups machines ids max-cpu q))
+             (machines-partitiono machines ids max-cpu q))
        (map (partial map (partial ids->machines machines)))))))
 
 (defn allocate-machines
