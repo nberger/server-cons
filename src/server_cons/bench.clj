@@ -77,33 +77,6 @@
                     {:id 73 :cpu-avg 29}
                     {:id 74 :cpu-avg 7}])
 
-(declare best-solution)
-
-(defn bench-lazy-solutions
-  [solutions-fn]
-  (time
-    (let [solutions (solutions-fn)]
-      (do
-        (time (println "solutions: " (count solutions)))
-        (println "first: ")
-        (println (first solutions))
-        (println "best: ")
-        (time (println (best-solution 60 solutions)))))))
-
-(defn bench-comb
-  [n]
-  (println "benchmark partition " n " machines")
-  (let [machines (take n machines)
-        partitions #(comb/allocate-by-partitions 60 machines)]
-    (bench-lazy-solutions partitions)))
-
-(defn bench-logic
-  [n]
-  (println "benchmark logic solutions " n " machines")
-  (let [machines (take n machines)
-        partitions #(allocate-machines* machines 60)]
-    (bench-lazy-solutions partitions)))
-
 (defn score
   "Calculates a solution score. The lower the better"
   [max-cpu solution]
@@ -116,6 +89,53 @@
        (reduce #(if (> (second %1) (second %2)) %2 %1))
        first))
 
+(defn bench-lazy-solutions
+  [solutions-fn]
+  (time
+    (let [solutions (solutions-fn)]
+      (do
+        (time (println "solutions: " (count solutions)))
+        (println "first: ")
+        (println (first solutions))
+        (println "best: ")
+        (time (println (best-solution 60 solutions)))))))
+
+(defn bench-first
+  [solutions-fn]
+  (time
+    (let [solutions (solutions-fn)]
+      (do
+        (time (println "first: " (first solutions)))
+        (println "score: " (score 60 (first solutions)))))))
+
+(defn bench-comb*
+  [n]
+  (println "benchmark partition " n " machines")
+  (let [machines (take n machines)
+        partitions #(comb/allocate-by-partitions 60 machines)]
+    (bench-lazy-solutions partitions)))
+
+(defn bench-comb
+  [n]
+  (println "benchmark first partition " n " machines")
+  (let [machines (take n machines)
+        partitions #(comb/allocate-by-partitions 60 machines)]
+    (bench-first partitions)))
+
+(defn bench-logic*
+  [n]
+  (println "benchmark logic solutions " n " machines")
+  (let [machines (take n machines)
+        partitions #(allocate-machines* machines 60)]
+    (bench-lazy-solutions partitions)))
+
+(defn bench-logic
+  [n]
+  (println "benchmark first logic solution " n " machines")
+  (let [machines (take n machines)
+        partitions #(allocate-machines* machines 60)]
+    (bench-first partitions)))
+
 (defn bench-best-solution
   [n]
   (time
@@ -127,21 +147,32 @@
 
   (count (combo/partitions (range 12))) ;4213597
 
-  (for [n (range 20)]
-    (do
-      (println "n: " n)
-      (bench-comb n)
-      (bench-logic n)))
+  (doseq [n (range 10 13)]
+    (println "n: " n)
+    (bench-comb n)
+    (bench-logic n))
 
   (bench-logic 4)
   (bench-logic 5)
   (bench-logic 7)
   (bench-logic 8)
+  (bench-logic 10)
   (bench-best-solution 8)
+  (bench-logic 12)
+  (bench-logic 18)
+  (bench-logic 19)
+  (bench-logic 20)
+  (bench-logic 30)
+  (bench-logic 40)
+  (bench-logic 50)
 
   (bench-comb 8)
   (bench-comb 9)
+  (bench-comb 10)
+  (bench-comb 11)
   (bench-comb 12)
+  (bench-comb 18)
+  (bench-comb 19)
 
   (let [machines (take 2 machines)]
     (enoughcpu 60 machines))
