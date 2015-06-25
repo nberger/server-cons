@@ -17,28 +17,25 @@
          (fd/>= remaining-cpu 0))) ; ## without this we might exceed max-cpu in each group
 
 (defn machinesgroupo
-  ([all-machines machine-ids final-rest-ids min-id max-cpu group]
-   (conda
-     ;; no machines -> finish here
-     [(emptyo machine-ids) (== machine-ids final-rest-ids) (emptyo group)]
-     ;; no more cpu -> finish here
-     [(== 0 max-cpu) (== machine-ids final-rest-ids) (emptyo group)] ; ## optimization: without this we might continue trying to put machines into a full group
+  [all-machines machine-ids final-rest-ids min-id max-cpu group]
+  (conda
+    ;; no machines -> finish here
+    [(emptyo machine-ids) (== machine-ids final-rest-ids) (emptyo group)]
+    ;; no more cpu -> finish here
+    [(== 0 max-cpu) (== machine-ids final-rest-ids) (emptyo group)] ; ## optimization: without this we might continue trying to put machines into a full group
 
-     [(conda ; ## if using conde instead, we'd get the smaller and the bigger group
+    [(conda ; ## if using conde instead of conda, we'd get both the smaller and the bigger group
 
-        ;; branch 1: try to add a machine to the group
-        [(fresh [id rest-group rest-ids remaining-cpu]
-                (rembero id machine-ids rest-ids)
+       ;; branch 1: try to add a machine to the group
+       [(fresh [id rest-group rest-ids remaining-cpu]
+               (rembero id machine-ids rest-ids)
+               (fd/>= id min-id) ; ## without this constraint we'd get all the permutations of each group
+               (enoughcpuo all-machines id max-cpu remaining-cpu)
+               (conso id rest-group group)
+               (machinesgroupo all-machines rest-ids final-rest-ids id remaining-cpu rest-group))]
 
-                (fd/>= id min-id) ; ## without this constraint we'll get permutations of each group
-                (enoughcpuo all-machines id max-cpu remaining-cpu)
-
-                (conso id rest-group group)
-
-                (machinesgroupo all-machines rest-ids final-rest-ids id remaining-cpu rest-group))]
-
-        ;; branch 2: close group here
-        [(== machine-ids final-rest-ids) (emptyo group)])])))
+       ;; branch 2: close group here
+       [(== machine-ids final-rest-ids) (emptyo group)])]))
 
 (defn machines-partitiono
   ([all-machines machine-ids max-cpu groups]
@@ -51,7 +48,8 @@
              (machinesgroupo all-machines machine-ids rest-ids min-id max-cpu group)
 
              (conso group rest-groups groups)
-             (firsto group first-id)
+             (firsto group first-id) ; extract the first-id, to ensure the next group starts after it
+             ; let's continue with the next group, passing the rest-ids (machines not grouped yet)
              (machines-partitiono all-machines first-id rest-ids max-cpu rest-groups))])))
 
 (defn ids->machines
@@ -78,31 +76,19 @@
 
 (comment
 
-  (run* [q]
-        (fresh [x]
-               (membero [1 x] [[1 :a] [2 :b]])
-               (== q x)))
-  ; => :a
+  (allocate-machines* [{:cpu-avg 20}] 60)
+  (allocate-machines* [{:cpu-avg 20} {:cpu-avg 35}] 60)
+  (allocate-machines* [{:cpu-avg 20} {:cpu-avg 45}] 60)
+  (allocate-machines* [{:cpu-avg 20} {:cpu-avg 45} {:cpu-avg 36} {:cpu-avg 1} {:cpu-avg 2}] 45)
 
-  (run* [q]
-        (fresh [x]
-               (membero [2 x] [[1 :a] [2 :b]])
-               (== q x)))
-  ; => :b
-
-  (run* [q] (fresh [x] (rembero x [3 1 2 3] q)))
 
   (def machine-groups->name-groups (partial map (partial map :name)))
   (def machine-groups->cpu-groups (partial map (partial map :cpu-avg)))
 
-  (allocate-machines* [{:cpu-avg 20}] 60)
-  (allocate-machines* [{:cpu-avg 20} {:cpu-avg 35}] 60)
-  (allocate-machines* [{:cpu-avg 20} {:cpu-avg 45}] 60)
-
   (->> (allocate-machines* [{:cpu-avg 20 :name "m1"} {:cpu-avg 35 :name "m2"} {:cpu-avg 20 :name "m3"}] 60)
        (map
          #_identity
-         #_machine-groups->cpu-groups
-         machine-groups->name-groups))
+         machine-groups->cpu-groups
+         #_machine-groups->name-groups))
 
   )

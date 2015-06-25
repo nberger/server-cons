@@ -9,23 +9,23 @@
 
 (def prop-all-machines-are-allocated
   (prop/for-all [[machines max-cpu] machines-gen]
-    (let [grouped-machines (allocate-machines machines max-cpu)
-          flattened (apply concat grouped-machines)]
+    (let [result (apply concat (allocate-machines machines max-cpu))]
       (and
-        (= (set flattened) (set machines))
-        (= (count flattened) (count machines))))))
+        (= (set result) (set machines))
+        (= (count result) (count machines))))))
 
 (def prop-no-group-exceeds-max-cpu
   (prop/for-all [[machines max-cpu] machines-gen]
     (let [grouped-machines (allocate-machines machines max-cpu)]
-      (every? #(>= max-cpu (reduce + (map :cpu-avg %))) grouped-machines))))
+      (every? #(>= max-cpu (reduce + (map :cpu-avg %)))
+              grouped-machines))))
 
 
 (defspec
   all-machines-are-allocated
   {:num-tests 20
    :max-size 10}
-  prop-all-machines-are-allocated )
+  prop-all-machines-are-allocated)
 
 (defspec
   no-group-exceeds-max-cpu
