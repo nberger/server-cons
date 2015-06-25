@@ -20,7 +20,6 @@
       (every? #(>= max-cpu (reduce + (map :cpu-avg %)))
               grouped-machines))))
 
-
 (defspec
   all-machines-are-allocated
   {:num-tests 20

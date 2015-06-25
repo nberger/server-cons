@@ -66,6 +66,15 @@
         [(nevero)]
         [(== q 'tea)]))
 
+
+; no termination depending on order of constraints
+
+(run* [q]
+      (fresh [x]
+             (== x [10 20 30])
+             (membero q x)))
+
+
 ; that's minikanren: run* fresh conde unify
 
 ; extensions
@@ -81,31 +90,12 @@
     (== q [x y])))
 ; ([6 3])
 
-(run* [q]
-      (conso 'a q '(a b c))
-      )
-
-; no termination
-
-(run* [q]
-      (fresh [x]
-             (== x [10 20 30])
-             (membero q x)))
 
 ; sudoku
 
-(defn pprint-sudoku [s]
-  (->> s
-       (partition 9)
-       (map #(->> (partition 3 %)
-                  (map (partial interpose " "))
-                  (map clojure.string/join)
-                  (clojure.string/join "  ")))
-       (partition 3)
-       (map (partial clojure.string/join "\n"))
-       (clojure.string/join "\n\n")
-       println)
-  )
+(declare pprint-sudoku)
+
+
 (pprint-sudoku [0 0 3  0 2 0  6 0 0
            9 0 0  3 0 5  0 0 1
            0 0 1  8 0 6  4 0 0
@@ -160,9 +150,6 @@
                 0 0 5  0 1 0  3 0 0])
      first
      pprint-sudoku)
-
-
-
 
 ; in memory database: genealogy
 
@@ -233,3 +220,65 @@
 
 
 ; next: test.check
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+(defn pprint-sudoku [s]
+  (->> s
+       (partition 9)
+       (map #(->> (partition 3 %)
+                  (map (partial interpose " "))
+                  (map clojure.string/join)
+                  (clojure.string/join "  ")))
+       (partition 3)
+       (map (partial clojure.string/join "\n"))
+       (clojure.string/join "\n\n")
+       println))
