@@ -230,3 +230,6 @@
 (pldb/with-db genealogy
          (run* [q]
            (cousin q 'Bobby)))
+
+
+; next: test.check
