@@ -13,8 +13,9 @@
   [all-machines id max-cpu remaining-cpu]
   (fresh [cpu]
          (getcpuo all-machines id cpu)
+         ;(== max-cpu remaining-cpu)
          (fd/- max-cpu cpu remaining-cpu)
-         (fd/>= remaining-cpu 0))) ; ## without this we might exceed max-cpu in each group
+         ))
 
 (defn machinesgroupo
   [all-machines machine-ids final-rest-ids min-id max-cpu group]

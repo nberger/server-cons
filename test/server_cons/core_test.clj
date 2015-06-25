@@ -2,35 +2,35 @@
   (:require [server-cons.core :refer [allocate-machines allocate-machines*]]
             [server-cons.generators :refer [machines-gen]]
             [clojure.core.logic :refer [run]]
-            [clojure.test :refer [is testing deftest]]
+            [clojure.test :refer [is testing deftest are]]
             [clojure.test.check.clojure-test :as ct :refer (defspec)]
             [clojure.test.check.generators :as gen]
             [clojure.test.check.properties :as prop]))
 
-(def prop-all-machines-are-allocated
+(gen/sample gen/int)
+(gen/sample gen/pos-int)
+(gen/sample (gen/one-of [gen/keyword gen/string gen/pos-int]))
+(gen/sample (gen/such-that #(> (count %) 2)
+                           (gen/vector gen/pos-int)))
+
+(gen/sample machines-gen)
+
+(defspec all-machines-are-allocated
+  {:num-tests 20
+   :max-size 10}
   (prop/for-all [[machines max-cpu] machines-gen]
     (let [result (apply concat (allocate-machines machines max-cpu))]
       (and
         (= (set result) (set machines))
         (= (count result) (count machines))))))
 
-(def prop-no-group-exceeds-max-cpu
+(defspec prop-no-group-exceeds-max-cpu
+  {:num-tests 20
+   :max-size 10}
   (prop/for-all [[machines max-cpu] machines-gen]
     (let [grouped-machines (allocate-machines machines max-cpu)]
       (every? #(>= max-cpu (reduce + (map :cpu-avg %)))
               grouped-machines))))
-
-(defspec
-  all-machines-are-allocated
-  {:num-tests 20
-   :max-size 10}
-  prop-all-machines-are-allocated)
-
-(defspec
-  no-group-exceeds-max-cpu
-  {:num-tests 20
-   :max-size 10}
-  prop-no-group-exceeds-max-cpu)
 
 (deftest allocate-machines-test
 

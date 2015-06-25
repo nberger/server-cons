@@ -33,7 +33,7 @@
              (== q [x y])
              (== y 3)
              (== x 6)
-             (membero y [3 4])  
+             (membero y [3 4])
              (membero x [1 2])))
 
 ; Disjunction
