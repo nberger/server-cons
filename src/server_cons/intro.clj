@@ -18,6 +18,7 @@
       (== true q))
 
 ; unbound vars -> solution can be anything
+; [_0 _1]
 (run* [q]
       (fresh [x y]
              (== q [x y])))
@@ -65,7 +66,11 @@
         [(nevero)]
         [(== q 'tea)]))
 
-; equations
+; that's minikanren: run* fresh conde unify
+
+; extensions
+
+; equations (FD: positive integers + 0)
 
 (run* [q]
   (fresh [x y]
@@ -159,7 +164,7 @@
 
 
 
-; genealogy
+; in memory database: genealogy
 
 (pldb/db-rel person p)
 (pldb/db-rel parent x y)
