@@ -1,9 +1,11 @@
 (ns server-cons.intro
   (:refer-clojure :exclude [==])
   (:require [clojure.core.logic.fd :as fd]
-            [clojure.core.logic.pldb :as pldb])
+            [clojure.core.logic.pldb :as pldb]
+            [server-cons.helpers :refer [pprint-sudoku]])
   (:use clojure.core.logic))
 
+; typical core.logic program
 (run* [q]
       (== q true))
 
@@ -93,20 +95,6 @@
 
 ; sudoku
 
-(declare pprint-sudoku)
-
-
-(pprint-sudoku [0 0 3  0 2 0  6 0 0
-           9 0 0  3 0 5  0 0 1
-           0 0 1  8 0 6  4 0 0
-
-           0 0 8  1 0 2  9 0 0
-           7 0 0  0 0 0  0 0 8
-           0 0 6  7 0 8  2 0 0
-
-           0 0 2  6 0 9  5 0 0
-           8 0 0  2 0 3  0 0 9
-           0 0 5  0 1 0  3 0 0])
 (defn get-square [rows x y]
   (for [x (range x (+ x 3))
         y (range y (+ y 3))]
@@ -220,65 +208,3 @@
 
 
 ; next: test.check
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-(defn pprint-sudoku [s]
-  (->> s
-       (partition 9)
-       (map #(->> (partition 3 %)
-                  (map (partial interpose " "))
-                  (map clojure.string/join)
-                  (clojure.string/join "  ")))
-       (partition 3)
-       (map (partial clojure.string/join "\n"))
-       (clojure.string/join "\n\n")
-       println))

@@ -5,7 +5,9 @@
             [clojure.test.check.properties :refer [for-all]]))
 
 ; from http://www.philandstuff.com/slides/2014/euroclojure.html
+
 (defn my-sort [coll] (seq (into (sorted-set) coll)))
+
 (deftest my-sort-is-correct
   (are [x y] (= x y)
        (my-sort [1])         [1]
@@ -29,6 +31,10 @@
     (let [output (my-sort input)]
       (= (frequencies input) (frequencies output)))))
 
+(comment
+  (my-sort-output-increasing-prop)
+  (my-sort-output-permutation-of-input)
+  )
 
 ;{... :fail [[3 -2 -4 -2 6]], :shrunk {:smallest [[-2 -2]]} ...}
 ;     [3 -2 -4 -2 6]
